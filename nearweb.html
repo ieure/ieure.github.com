@@ -30,7 +30,7 @@ $(function() {
                     places['features'][i].properties['website'] + "\">" +
                     places['features'][i].properties['name'] + "</a></li>");
         };
-        $('reload').removeClass('disabled');
+        $('#refresh').removeClass('disabled');
     };
 
     var tries = 0;
@@ -55,7 +55,7 @@ $(function() {
                                       placesSearchThunk);
     };
 
-    $('#reload').click(function(event) {
+    $('#refresh').click(function(event) {
         $(this).addClass('disabled');
         load();
     });
@@ -113,6 +113,10 @@ li
     text-align: center;
 }
 
+#refresh {
+    display: none;
+};
+
 .disabled {
     color: #aaa;
 };
@@ -121,6 +125,7 @@ li
     <body>
         <ul id="nearby">
             <li id="status">One moment…</li>
+            <li id="refresh">⟲ Refresh</li>
         </ul>
     </body>
 </html>
