@@ -1,6 +1,8 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport"
+              content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
         <title>Nearweb</title>
         <script type="application/javascript"
                 src="http://code.jquery.com/jquery-1.5.2.min.js"></script>
@@ -22,12 +24,16 @@ $(function() {
             if (!places['features'][i].properties['website']) {
                 continue;
             }
+            $('li.place').remove();
             $('#nearby').append(
                 "<li class=\"place\"><a href=\"http://" +
                     places['features'][i].properties['website'] + "\">" +
                     places['features'][i].properties['name'] + "</a></li>");
         };
+        $('reload').removeClass('disabled');
     };
+
+    var tries = 0;
 
     var placesSearchThunk = function(err, position) {
         if (err) {
@@ -35,13 +41,28 @@ $(function() {
                 .html("☹ Sorry, I couldn't determine your location.");
             return;
         }
-        console.log(position);
+        if (position.accuracy >= 250 && tries <= 3) {
+            tries += 1;
+            $('#status').show().html("Stop moving!")
+        }
         places.search(position.coords.latitude, position.coords.longitude, {},
                       populatePlaces);
     };
 
-    client.getLocationFromBrowser({}, placesSearchThunk);
+    var load = function() {
+        client.getLocationFromBrowser({enableHighAccuracy: true,
+                                       maximumAge: 0},
+                                      placesSearchThunk);
+    };
+
+    $('#reload').click(function(event) {
+        $(this).addClass('disabled');
+        load();
+    });
+
+    load();
 });
+
         </script>
         <style type="text/css">
 html,
@@ -50,11 +71,12 @@ body
     margin: 0;
     padding: 0;
     background: white;
+    -webkit-text-size-adjust: none;
     font-family: "Helvetica", sans-serif;
     font-stretch: semi-condensed;
-    font-size: 14pt;
     letter-spacing: -0.1em;
-    line-height: 12pt;
+    font-size: 18pt;
+    line-height: 16pt;
 }
 
 a,
@@ -83,13 +105,17 @@ a
 li
 {
     border-bottom: 1px solid #ddd;
-    padding: .25em 1em;
+    padding: .25em;
 }
 
 #status
 {
     text-align: center;
 }
+
+.disabled {
+    color: #aaa;
+};
         </style>
     </head>
     <body>
