@@ -20,20 +20,33 @@ $(function() {
             return;
         }
         $('#status').hide();
+        $('li.place').remove();
         for (var i in places['features']) {
             if (!places['features'][i].properties['website']) {
                 continue;
             }
-            $('li.place').remove();
             $('#nearby').append(
                 "<li class=\"place\"><a href=\"http://" +
                     places['features'][i].properties['website'] + "\">" +
                     places['features'][i].properties['name'] + "</a></li>");
         };
-        $('#refresh').removeClass('disabled');
+        $('#refresh').removeClass('disabled').show();
     };
 
     var tries = 0;
+
+    var updateLocation = function(lat, lon) {
+        window.title = "Nearweb: Places near " + lat + "," + lon;
+        window.history.pushState(undefined, window.title,
+                                 window.location.pathname + '#' + lat +
+                                 ',' + lon);
+    };
+
+    var placesSearch = function(lat, lon) {
+        updateLocation(lat, lon);
+        places.search(lat, lon, {}, populatePlaces);
+    };
+
 
     var placesSearchThunk = function(err, position) {
         if (err) {
@@ -41,12 +54,14 @@ $(function() {
                 .html("☹ Sorry, I couldn't determine your location.");
             return;
         }
-        if (position.accuracy >= 250 && tries <= 3) {
+        console.log(position);
+
+        if (position.coords.accuracy >= 150 && tries <= 3) {
             tries += 1;
-            $('#status').show().html("Stop moving!")
+            $('#status').show().html("Stop moving!");
+            load();
         }
-        places.search(position.coords.latitude, position.coords.longitude, {},
-                      populatePlaces);
+        placesSearch(position.coords.latitude, position.coords.longitude);
     };
 
     var load = function() {
@@ -56,14 +71,23 @@ $(function() {
     };
 
     $('#refresh').click(function(event) {
-        $(this).addClass('disabled');
+        if ($(this).is('.disabled')) {
+            return;
+        }
+        $(this).addClass('disabled').hide();
+        $('#status').html("Loading…").show();
         load();
     });
 
-    load();
+    if (window.location.hash != "") {
+        var coords = window.location.hash.substring(1).split(",");
+        placesSearch(coords[0], coords[1]);
+    } else {
+        load();
+    }
 });
 
-        </script>
+</script>
         <style type="text/css">
 html,
 body
@@ -115,17 +139,26 @@ li
 
 #refresh {
     display: none;
-};
+    text-align: center;
+    font-size: 40pt;
+}
+
+#refresh:hover {
+    cursor: hand;
+}
 
 .disabled {
     color: #aaa;
-};
+    display: absolute;
+    position: left;
+}
+
         </style>
     </head>
     <body>
         <ul id="nearby">
             <li id="status">One moment…</li>
-            <li id="refresh">⟲ Refresh</li>
+            <li id="refresh">⟲</li>
         </ul>
     </body>
 </html>
